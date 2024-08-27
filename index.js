@@ -4,9 +4,34 @@ const db=require('./db');
 const User=require('./model/person.model.js');
 
 const bodyParser=require('body-parser');
-app.use(bodyParser.json()); //req.body
 
-app.get('/test',(req,res)=>{
+//Auth
+const passport=require('passport')
+const LocalStrategy=require('passport-local').Strategy;
+app.use(passport.initialize());
+app.use(bodyParser.json()); //req.body
+const PassportMiddle=passport.authenticate('local',{session:false});
+
+passport.use(new LocalStrategy(async(username,password,done)=>{
+    try {
+        
+        const user=await User.findOne({username:username});
+        if(!user){
+            return done(null,false,{message:"Incorrect Username"});
+        }
+        const isPassMatch=user.password===password?true:false;
+        if(!isPassMatch){
+            return done(null,false,{message:'Incorrect Password'});
+        }
+        return done(null,user);
+    } catch (error) {
+        res.status(500).json({error:"internal Server error"});
+    }
+}))
+
+
+
+app.get('/test',PassportMiddle,function (req,res){
     res.send("{'API is working'}");
 });
 
@@ -90,20 +115,12 @@ app.delete('/users/:id',async(req,res)=>{
 })
 
 //middleware concept
-
-
 const middle=(req,res,next)=>{
     console.log(`${new Date().toLocaleString()} req made at: ${req.originalURL}`)
     next(); //if not mention this, res will not be sent
 }
 app.use(middle);
 
-app.get('/middle',(req,res)=>{
-    res.send('Middleware executed');
-})
-app.get('/middle2',(req,res)=>{
-    res.send('executed');
-})
 
 
 app.listen(3000,()=>{
