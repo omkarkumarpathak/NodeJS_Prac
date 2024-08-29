@@ -1,6 +1,11 @@
 const jwt=require('jsonwebtoken');
 
 const jwtAuthMiddleware=(req,res,next)=>{
+
+    const authHeader=req.headers.authorization;
+    if(!authHeader){
+        return res.status(401).json({error:'Token requires'});
+    }
     const token=req.headers.authorization.split(' ')[1];
     if(!token){
         return res.status(401).json({error:"Unauthorized"});

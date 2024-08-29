@@ -8,6 +8,8 @@ require('dotenv').config();
 const passport=require('./auth.js');
 const { generateToken } = require('./jwt.js');
 
+const {jwtAuthMiddleware}=require('./jwt.js');
+
 app.use(passport.initialize());
 app.use(bodyParser.json()); //req.body
 const PassportMiddle=passport.authenticate('local',{session:false});
@@ -20,7 +22,7 @@ app.get('/test',PassportMiddle,function (req,res){
     res.send("{'API is working'}");
 });
 
-app.get('/',(req,res)=>{
+app.get('/',jwtAuthMiddleware,(req,res)=>{
     res.send('Home accessed')
 })
 
