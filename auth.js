@@ -1,6 +1,8 @@
 //Auth
 const passport=require('passport')
 const LocalStrategy=require('passport-local').Strategy;
+const User=require('./model/person.model.js')
+const bcryptjs=require('bcryptjs');
 
 passport.use(new LocalStrategy(async(username,password,done)=>{
     try {
@@ -8,8 +10,10 @@ passport.use(new LocalStrategy(async(username,password,done)=>{
         if(!user){
             return done(null,false,{message:"Incorrect Username"});
         }
-        const isPassMatch=user.password===password?true:false;
-        if(!isPassMatch){
+        
+        const validPassword=bcryptjs.compareSync(user.password,password);
+        
+        if(!validPassword){
             return done(null,false,{message:'Incorrect Password'});
         }
         return done(null,user);

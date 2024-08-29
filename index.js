@@ -2,32 +2,16 @@ const express=require('express');
 const app=express();
 const db=require('./db');
 const User=require('./model/person.model.js');
-
+const bcryptjs=require('bcryptjs')
 const bodyParser=require('body-parser');
 
-//Auth
-const passport=require('passport')
-const LocalStrategy=require('passport-local').Strategy;
+const passport=require('./auth.js');
+
 app.use(passport.initialize());
 app.use(bodyParser.json()); //req.body
 const PassportMiddle=passport.authenticate('local',{session:false});
 
-passport.use(new LocalStrategy(async(username,password,done)=>{
-    try {
-        
-        const user=await User.findOne({username:username});
-        if(!user){
-            return done(null,false,{message:"Incorrect Username"});
-        }
-        const isPassMatch=user.password===password?true:false;
-        if(!isPassMatch){
-            return done(null,false,{message:'Incorrect Password'});
-        }
-        return done(null,user);
-    } catch (error) {
-        res.status(500).json({error:"internal Server error"});
-    }
-}))
+
 
 
 
@@ -45,10 +29,17 @@ app.get('/',(req,res)=>{
 app.post('/user',async(req,res)=>{
     
     try {
-        const data=req.body;
+        const {username,email,password}=req.body; 
         //creating new document using Mongoose Model
-        const newUser=new User(data);
+        const hashedPassword=bcryptjs.hashSync(password,10);
+
+        const newUser=new User({
+            username:username,
+            password:hashedPassword,
+            email:email,
+        })
         //Saving the document in database
+        
         const response=await newUser.save();
         console.log('data saved');
         //if successfully saved, below will be called
