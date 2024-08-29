@@ -27,7 +27,7 @@ app.get('/',(req,res)=>{
 
 
 //saving each user in database
-app.post('/user',async(req,res)=>{
+app.post('/signup',async(req,res)=>{
     
     try {
         const {username,email,password}=req.body; 
@@ -61,6 +61,34 @@ app.post('/user',async(req,res)=>{
         console.log(error);
         res.status(500).json({error:'Internal server Error'});
     }
+})
+
+//login
+
+app.post('/login',async(req,res)=>{
+
+    const {username,password}=req.body;
+    try {
+        const user=await User.findOne({username});
+        if(!user) return res.status(401).json({error:"Invalid Username"});
+        const passwordMatch=bcryptjs.compareSync(password,user.password);
+        if(!passwordMatch) return res.status(401).json({error:"Invalid Password"});
+
+        //creating & returning token to user
+        const payload={
+            id:user.id,
+            username:user.username
+        }
+
+        const token=generateToken(payload);
+
+        res.json({token});
+
+    } catch (error) {
+        return res.status(505).json({error:"internal server error"});
+    }
+
+
 })
 
 //fetching user from database using GET Method
