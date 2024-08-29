@@ -4,8 +4,9 @@ const db=require('./db');
 const User=require('./model/person.model.js');
 const bcryptjs=require('bcryptjs')
 const bodyParser=require('body-parser');
-
+require('dotenv').config();
 const passport=require('./auth.js');
+const { generateToken } = require('./jwt.js');
 
 app.use(passport.initialize());
 app.use(bodyParser.json()); //req.body
@@ -42,8 +43,19 @@ app.post('/user',async(req,res)=>{
         
         const response=await newUser.save();
         console.log('data saved');
+
+        //generating token
+        const payload={
+            id:response.id,   //_id==id here, mongoDB assumption
+            username:response.username
+        }
+
+        console.log(JSON.stringify(payload));
+        const token=generateToken(payload);
+        console.log(token);
+
         //if successfully saved, below will be called
-        res.status(200).json(response);
+        res.status(200).json({response:response, token:token});
         
     } catch (error) {
         console.log(error);
@@ -114,7 +126,8 @@ app.use(middle);
 
 
 
-app.listen(3000,()=>{
+const port=process.env.PORT || 3000;
+app.listen(port,()=>{
     console.log("listening server");
 });
 
